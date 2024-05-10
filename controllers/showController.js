@@ -1,3 +1,4 @@
+const { validationResult } = require('express-validator');
 const { Show, User } = require('../models');
 
 const getAllShows = async (req, res) => {
@@ -34,14 +35,19 @@ const getUsersThatWatchedShow = async (req, res) => {
 
 const updateShowAvailability = async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const showId = req.params.showId;
     const isAvailable = req.body;
 
     const show = await Show.findByPk(showId);
     if (!show) res.status(404).send('show does not exist...');
 
-    show.update(isAvailable);
-    show.save();
+    await show.update(isAvailable);
+    await show.save();
 
     res.status(200).json(show);
   } catch (error) {
